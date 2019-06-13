@@ -1,0 +1,6 @@
+# Cargo 工作空间
+[workspace]
+members = [
+    "add",
+    "addr",
+]

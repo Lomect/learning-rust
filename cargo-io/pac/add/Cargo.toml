@@ -1,0 +1,8 @@
+[package]
+name = "add"
+version = "0.1.0"
+authors = ["lome <1209518758@qq.com>"]
+edition = "2018"
+
+[dependencies]
+addr = { path = "../addr"}

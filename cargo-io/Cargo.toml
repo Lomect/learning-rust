@@ -1,0 +1,22 @@
+[package]
+name = "cargo-io"
+version = "0.1.0"
+authors = ["lome <1209518758@qq.com>"]
+edition = "2018"
+
+[dependencies]
+
+# opt-level 设置控制 Rust 会对代码进行何种程度的优化。这个配置的值从 0 到 3.
+# release 配置的 opt-level 默认为 3
+[profile.release]
+opt-level = 3
+
+# dev 的 opt-level 默认为 0
+[profile.dev]
+opt-level = 0
+
+[workspace]
+members = [
+    "add",
+    "addr",
+]

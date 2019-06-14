@@ -1,5 +1,5 @@
 [package]
-name = "smart-point"
+name = "sm"
 version = "0.1.0"
 authors = ["lome <1209518758@qq.com>"]
 edition = "2018"

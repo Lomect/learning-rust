@@ -18,6 +18,12 @@ enum List {
 
 use List::{Cons, Nil};
 
+//
+//
+//impl List {
+//    fn tail(&self) -> Option<&RefCell>
+//}
+
 struct MyBox<T>(T);
 
 impl<T> MyBox<T> {

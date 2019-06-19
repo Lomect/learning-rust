@@ -2,14 +2,7 @@ use std::net::{TcpListener, TcpStream};
 use std::io::{Read, Write};
 use std::fs;
 use std::thread;
-
-struct ThreadPool;
-
-impl ThreadPool {
-    fn new(size: u32) -> ThreadPool { ThreadPool }
-    fn execute<F>(&self, f: F)
-        where F: FnOnce() + Send + 'static {}
-}
+use web::ThreadPool;
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:8090").unwrap();

@@ -5,10 +5,59 @@ use std::ptr::{Unique, NonNull, self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
-use std::alloc::{Alloc, GlobalAlloc, Layout, Global, handle_alloc_error}
-use std::io::set_panic;
+use std::alloc::{Alloc, GlobalAlloc, Layout, Global, handle_alloc_error};
 
-struct  MyVec<T> {
+
+struct RawVec<T> {
+    ptr: Unique<T>,
+    cap: usize
+}
+
+impl<T> RawVec<T> {
+    fn new() -> Self {
+        let cap = if mem::size_of::<T>() == 0 { !0 } else { 0 };
+        RawVec { ptr: Unique::empty(), cap: cap }
+    }
+
+    fn grow(&mut self) {
+        unsafe {
+            let elem_size = mem::size_of::<T>();
+
+            let (new_cap, ptr) = if self.cap = 0 {
+                let ptr = heap::allocate(elem_size, aligen);
+                (1, ptr)
+            } else {
+                let new_cap = self.cap * 2;
+                let c: NonNull<T>= self.ptr.into();
+
+                let ptr = Global.realloc(c.cast(), Layout::array::<T>(self.cap).unwrap(), Layout::array::<T>(new_cap).unwrap().size());
+                (new_cap, ptr)
+            };
+            if ptr.is_err() {
+                handle_alloc_error(Layout::from_size_align_unchecked(
+                    new_cap * elem_size,
+                    mem::align_of::<T>(),
+                ))
+            }
+            self.ptr = Unique::new_unchecked(ptr.as_ptr() as *mut _);
+            self.cap = new_cap;
+        }
+    }
+}
+
+impl<T> Drop for RawVec<T> {
+    fn drop(&mut self) {
+        let elem_size = mem::size_of::<T>();
+        if self.cap != 0 && elem_size != 0{
+            unsafe {
+                let c: NonNull<T> = self.ptr.into();
+                Global.dealloc(c.cast(), Layout::array::<T>(self.cap).unwrap());
+            }
+        }
+    }
+}
+
+pub struct  MyVec<T> {
     buf: RawVec<T>,
     len: usize
 }
@@ -278,60 +327,6 @@ impl<T> Drop for IntoIter<T> {
         }
     }
 }
-
-struct RawVec<T> {
-    ptr: Unique<T>,
-    cap: usize
-}
-
-impl<T> RawVec<T> {
-    fn new() -> Self {
-        assert!(mem::size_of::<T>() == 0, "TODO:实现零尺寸类型的支持");
-        RawVec { ptr: Unique::empty(), cap: 0}
-    }
-
-    fn grow(&mut self) {
-        unsafe {
-            let aligen = mem::align_of::<T>();
-            let elem_size = mem::size_of::<T>();
-
-            let (new_cap, ptr) = if self.cap = 0 {
-                let ptr = heap::allocate(elem_size, aligen);
-                (1, ptr)
-            } else {
-                let new_cap = self.cap * 2;
-                let old_num_bytes = self.cap * type_size;
-
-                assert!(old_num_bytes <= (::std::isize::MAX as usize)/2, "caption over flow!");
-                let new_num_bytes = old_num_bytes * 2;
-                let ptr = heap::reallocate(self.ptr.as_ptr() as *mut _,
-                                           old_num_bytes,
-                                           new_num_bytes,
-                                           align);
-                (new_cap, ptr)
-            };
-            if ptr.is_null() { oom(); }
-            self.ptr = Unique::new(ptr as *mut _);
-            self.cap = new_cap;
-        }
-    }
-}
-
-impl<T> Drop for RawVec<T> {
-    fn drop(&mut self) {
-        if self.cap != 0 {
-            let align = mem::align_of::<T>();
-            let elem_size = mem::size_of::<T>();
-
-            let num_bytes = elem_size * self.cap;
-            unsafe {
-                heap::deallocate(self.ptr.as_mut() as *mut _, num_bytes, align);
-            }
-        }
-    }
-}
-
-
 
 impl<'a, T> Iterator for Drain<'a, T> {
     type Item = T;
